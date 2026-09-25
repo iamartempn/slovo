@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<title>Скачивания Слова</title>
+<link rel="icon" type="image/png" href="../img/icon-64.png">
+<!-- Личная страница автора: ссылок на нее с сайта нет, поисковикам закрыта. Данные —
+     stats.json из ветки `stats`, его раз в 6 часов пишет .github/workflows/stats.yml. -->
+<style>
+:root {
+  --bg: #f5f5f7; --card: #ffffff; --fg: #1d1d1f; --muted: #6e6e73; --line: #e3e3e8;
+  --accent: #0071e3; --accent-soft: rgba(0, 113, 227, 0.12); --good: #1f8a3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #000000; --card: #1c1c1e; --fg: #f5f5f7; --muted: #a1a1a6; --line: #2c2c2e;
+          --accent: #0a84ff; --accent-soft: rgba(10, 132, 255, 0.18); --good: #30d158; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased; padding: 48px 16px 64px; }
+main { max-width: 880px; margin: 0 auto; display: grid; gap: 20px; }
+header { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+header img { width: 44px; height: 44px; }
+h1 { font-size: 28px; line-height: 1.1; letter-spacing: -0.02em; margin: 0; }
+.sub { color: var(--muted); font-size: 14px; margin: 2px 0 0; }
+.card { background: var(--card); border-radius: 22px; padding: 24px; }
+.kpis { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px; }
+.kpi .label { color: var(--muted); font-size: 14px; }
+.kpi .value { font-size: 44px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1;
+  font-variant-numeric: tabular-nums; }
+.kpi.main .value { font-size: 64px; }
+.kpi .delta { color: var(--good); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+h2 { font-size: 17px; margin: 0 0 16px; letter-spacing: -0.01em; }
+svg { display: block; width: 100%; height: auto; }
+.axis { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.grid-line { stroke: var(--line); stroke-width: 1; }
+.empty { color: var(--muted); font-size: 14px; margin: 0; }
+.rows { display: grid; gap: 14px; }
+.row { display: grid; grid-template-columns: 70px 1fr 48px; align-items: center; gap: 14px;
+  font-variant-numeric: tabular-nums; }
+.row .tag { font-weight: 600; }
+.row .date { color: var(--muted); font-size: 12px; display: block; font-weight: 400; }
+.bar { height: 10px; border-radius: 5px; background: var(--accent-soft); overflow: hidden; }
+.bar span { display: block; height: 100%; border-radius: 5px; background: var(--accent); }
+.row .n { text-align: right; font-weight: 600; }
+footer { color: var(--muted); font-size: 13px; display: flex; gap: 16px; flex-wrap: wrap; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.error { color: var(--muted); }
+@media (max-width: 640px) {
+  .kpis { grid-template-columns: 1fr 1fr; }
+  .kpi.main { grid-column: 1 / -1; }
+  .kpi.main .value { font-size: 52px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="../img/icon-64.png" alt="">
+    <div>
+      <h1>Скачивания Слова</h1>
+      <p class="sub" id="updated">Загружаю данные…</p>
+    </div>
+  </header>
+
+  <section class="card kpis">
+    <div class="kpi main"><div class="label">Всего скачиваний</div><div class="value" id="total">—</div></div>
+    <div class="kpi"><div class="label">За сутки</div><div class="value" id="day">—</div></div>
+    <div class="kpi"><div class="label">За 7 дней</div><div class="value" id="week">—</div></div>
+  </section>
+
+  <section class="card">
+    <h2>Всего скачиваний по дням</h2>
+    <div id="chart"><p class="empty">Загружаю…</p></div>
+  </section>
+
+  <section class="card">
+    <h2>По версиям</h2>
+    <div class="rows" id="versions"></div>
+  </section>
+
+  <footer>
+    <span>Считаются скачивания Slovo.dmg с GitHub. Обновляется раз в 6 часов и при выходе версии.</span>
+    <a href="https://github.com/iamartempn/slovo/releases">Выпуски</a>
+    <a href="../">Сайт</a>
+  </footer>
+</main>
+
+<script>
+const SOURCE = "https://raw.githubusercontent.com/iamartempn/slovo/stats/stats.json";
+const fmt = new Intl.NumberFormat("ru-RU");
+const $ = (id) => document.getElementById(id);
+
+function plural(n, one, few, many) {
+  const a = n % 10, b = n % 100;
+  if (a === 1 && b !== 11) return one;
+  if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return few;
+  return many;
+}
+
+// Сколько скачали за последние `days` дней: разница с последним снимком до этого срока.
+function gained(history, days) {
+  if (!history.length) return null;
+  const last = history[history.length - 1];
+  const cutoff = new Date(last.date + "T00:00:00Z");
+  cutoff.setUTCDate(cutoff.getUTCDate() - days);
+  const before = history.filter((h) => new Date(h.date + "T00:00:00Z") <= cutoff).pop();
+  return last.total - (before ? before.total : 0);
+}
+
+function chart(history) {
+  if (history.length < 2) {
+    $("chart").innerHTML = '<p class="empty">График появится, когда наберется история хотя бы за два дня.</p>';
+    return;
+  }
+  const W = 820, H = 240, L = 40, R = 12, T = 12, B = 28;
+  const max = Math.max(1, ...history.map((h) => h.total));
+  const step = Math.pow(10, Math.floor(Math.log10(max)));
+  const top = Math.ceil(max / step) * step;
+  const x = (i) => L + (W - L - R) * (history.length === 1 ? 0.5 : i / (history.length - 1));
+  const y = (v) => T + (H - T - B) * (1 - v / top);
+  const pts = history.map((h, i) => [x(i), y(h.total)]);
+  const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  const area = line + ` L${x(history.length - 1).toFixed(1)} ${y(0)} L${x(0).toFixed(1)} ${y(0)} Z`;
+  let grid = "";
+  for (let k = 0; k <= 4; k++) {
+    const v = (top / 4) * k;
+    grid += `<line class="grid-line" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/>` +
+            `<text class="axis" x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${fmt.format(Math.round(v))}</text>`;
+  }
+  const label = (h) => new Date(h.date + "T00:00:00Z").toLocaleDateString("ru-RU", { day: "numeric", month: "short", timeZone: "UTC" });
+  const ticks = [0, Math.floor((history.length - 1) / 2), history.length - 1]
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .map((i) => `<text class="axis" x="${x(i)}" y="${H - 8}" text-anchor="${i === 0 ? "start" : i === history.length - 1 ? "end" : "middle"}">${label(history[i])}</text>`)
+    .join("");
+  const end = pts[pts.length - 1];
+  $("chart").innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Всего скачиваний по дням">
+       ${grid}
+       <path d="${area}" fill="var(--accent-soft)" stroke="none"/>
+       <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+       <circle cx="${end[0]}" cy="${end[1]}" r="5" fill="var(--accent)" stroke="var(--card)" stroke-width="2"/>
+       ${ticks}
+     </svg>`;
+}
+
+function versions(releases) {
+  const max = Math.max(1, ...releases.map((r) => r.downloads));
+  $("versions").innerHTML = releases.slice().reverse().map((r) => {
+    const date = r.published ? new Date(r.published).toLocaleDateString("ru-RU", { day: "numeric", month: "short" }) : "";
+    return `<div class="row">
+      <span class="tag">${r.tag.replace(/^v/, "")}<span class="date">${date}</span></span>
+      <div class="bar"><span style="width:${(r.downloads / max) * 100}%"></span></div>
+      <span class="n">${fmt.format(r.downloads)}</span>
+    </div>`;
+  }).join("");
+}
+
+fetch(SOURCE, { cache: "no-store" })
+  .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then((s) => {
+    $("total").textContent = fmt.format(s.total);
+    const d = gained(s.history, 1), w = gained(s.history, 7);
+    $("day").textContent = d === null ? "—" : "+" + fmt.format(d);
+    $("week").textContent = w === null ? "—" : "+" + fmt.format(w);
+    const when = new Date(s.updated).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+    const n = s.releases.length;
+    $("updated").textContent = `Обновлено ${when}, ${n} ${plural(n, "версия", "версии", "версий")}`;
+    chart(s.history);
+    versions(s.releases);
+  })
+  .catch(() => {
+    $("updated").innerHTML = '<span class="error">Данные пока не собраны: сбор идет раз в 6 часов.</span>';
+    $("chart").innerHTML = '<p class="empty">Нет данных.</p>';
+  });
+</script>
+</body>
+</html>

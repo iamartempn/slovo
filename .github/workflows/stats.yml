@@ -1,0 +1,51 @@
+# Счетчики скачиваний: раз в 6 часов и при каждом выпуске собирает число скачиваний
+# Slovo.dmg по версиям и дописывает снимок дня в stats.json в отдельной ветке `stats`.
+#
+# Ветка отдельная, чтобы сбор не мешал выкладке сайта: в main пишет только сборка сайта.
+# Страница /stats/ читает файл с raw.githubusercontent.com — он отдается с CORS.
+# Токен здесь штатный GITHUB_TOKEN: лимит API для него свой, не по IP.
+
+name: stats
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stats
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Собрать счетчики
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch origin stats 2>/dev/null && git show origin/stats:stats.json > old.json || echo '{}' > old.json
+          gh api "repos/${{ github.repository }}/releases?per_page=100" > releases.json
+          python3 .github/collect_stats.py old.json releases.json > stats.json
+
+      - name: Записать в ветку stats
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git worktree add --detach ../stats-branch
+          cd ../stats-branch
+          git checkout --orphan stats-new
+          git rm -rfq . >/dev/null 2>&1 || true
+          cp ../${{ github.event.repository.name }}/stats.json .
+          git add stats.json
+          git commit -qm "Счетчики скачиваний $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -f origin stats-new:stats
