@@ -216,6 +216,7 @@ kbd { font: 500 14px -apple-system, sans-serif; padding: 1px 7px; border-radius:
 
 /* ---------- скачивание внизу ---------- */
 .final { text-align: center; }
+.final .support { margin-top: 28px; font-size: 17px; color: var(--muted); }
 .final .icon { width: 96px; height: 96px; margin: 0 auto 20px; }
 
 /* ---------- подвал ---------- */
