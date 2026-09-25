@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Политика конфиденциальности «Слово»</title>
+<link rel="icon" type="image/png" href="img/icon-64.png">
+<style>
+:root { color-scheme: light dark; --bg:#fff; --fg:#1d1d1f; --muted:#6e6e73; --line:#d2d2d7;
+        --link:#0066cc; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#000; --fg:#f5f5f7; --muted:#a1a1a6; --line:#424245; --link:#2997ff; } }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--fg);
+       font: 17px/1.53 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+       -webkit-font-smoothing: antialiased; }
+main { max-width: 692px; margin: 0 auto; padding: 72px 16px 96px; }
+h1 { font-size: 40px; line-height: 1.1; letter-spacing: -0.02em; font-weight: 700; margin: 0 0 8px; }
+h2 { font-size: 24px; line-height: 1.17; letter-spacing: -0.01em; font-weight: 600; margin: 48px 0 12px; }
+p, li { color: var(--fg); }
+.meta { color: var(--muted); margin: 0 0 32px; }
+em { color: var(--muted); font-style: normal; }
+ul { padding-left: 1.2em; } li { margin: 6px 0; }
+code { font: 15px ui-monospace, "SF Mono", Menlo, monospace; background: color-mix(in srgb, var(--fg) 7%, transparent);
+       padding: 2px 6px; border-radius: 6px; word-break: break-all; }
+a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+.back { display:inline-block; margin-bottom: 40px; font-size: 15px; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 48px 0 0; }
+</style>
+</head>
+<body><main>
+<a class="back" href="./">← Слово</a>
+<h1>Политика конфиденциальности «Слово»</h1>
+<p class="meta">Редакция 1.0 от 25 сентября 2026 года.</p>
+<h2>Коротко</h2>
+<p>«Слово» не собирает о вас никаких данных. Записи, расшифровки, саммари и профили хранятся только на вашем Mac и никуда не отправляются. У приложения нет серверов, учетных записей, аналитики, рекламы и счетчиков.</p>
+<h2>Что происходит на вашем компьютере</h2>
+<ul><li><strong>Распознавание речи и саммари</strong> выполняются нейросетями прямо на вашем Mac. Звук и текст не покидают компьютер.</li><li><strong>Микрофон</strong> используется только тогда, когда вы сами начинаете запись. Доступ к нему выдается и отзывается в «Системных настройках» → «Конфиденциальность и безопасность» → «Микрофон».</li><li><strong>Расшифровки</strong> сохраняются файлами рядом с записью или в выбранной вами папке.</li><li><strong>Служебные данные</strong> — список расшифровок, профили, фотографии профилей и скачанные модели — лежат в папке приложения <code>~/Library/Application Support/com.pogosian.transcribe</code>. Их можно удалить в любой момент в окне «Приватность и безопасность» или вручную.</li></ul>
+<h2>Когда приложение выходит в интернет</h2>
+<ul><li><strong>Скачивание моделей.</strong> Только по вашему выбору и только с сайта Hugging Face (huggingface.co) по защищенному соединению. При этом Hugging Face, как и любой сайт, видит IP-адрес и сведения о запросе; на эти данные распространяется политика конфиденциальности Hugging Face. Никаких сведений о вас, ваших записях или текстах в запросе нет.</li><li><strong>Кнопка «Перейти к оплате»</strong> открывает страницу платежного сервиса в браузере. Приложение не передает ему никаких данных; условия платежа определяет сам сервис.</li></ul>
+<p>Больше приложение в сеть не обращается: после загрузки моделей оно полностью работает без интернета.</p>
+<h2>Сайт</h2>
+<p>Сайт «Слова» размещен на GitHub Pages, а установочный файл — в разделе выпусков GitHub. Сайт не использует файлы cookie, аналитику и сторонние счетчики. GitHub может вести технические журналы посещений, включая IP-адреса, по своей политике конфиденциальности.</p>
+<h2>Персональные данные</h2>
+<p>Разработчик не получает, не хранит и не обрабатывает ваши персональные данные. Если в записях есть сведения о других людях, они остаются на вашем компьютере под вашим контролем — позаботьтесь о законности их записи и хранения.</p>
+<h2>Изменения и вопросы</h2>
+<p>Если политика изменится, новая редакция появится на сайте приложения до выхода версии, к которой она относится. Вопросы: <a href="https://github.com/iamartempn/slovo/issues">https://github.com/iamartempn/slovo/issues</a></p>
+</main></body>
+</html>
